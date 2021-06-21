@@ -1,0 +1,132 @@
+views:
+  - title: Irrigation
+    path: irrigation
+    icon: mdi:watering-can-outline
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: entities
+            entities:
+              - entity: switch.sonoff_1000cae59e_1
+              - entity: switch.sonoff_1000cae59e_2
+              - entity: switch.sonoff_1000cae59e_3
+              - entity: switch.sonoff_1000cae59e_4
+            title: Reticulation Controller
+            theme: noctis
+          - type: entity
+            entity: group.retic_stations
+          - type: entity
+            entity: switch.sonoff_1000b0daba
+          - type: entities
+            entities:
+              - entity: timer.retic_stn_1_timer
+              - entity: timer.retic_stn_2_timer
+              - entity: timer.retic_stn_3_timer
+              - entity: timer.retic_stn_4_timer
+            show_header_toggle: false
+            title: Retic Station Current Run Time
+          - type: entities
+            entities:
+              - entity: input_number.retic_stn_1_settime
+              - entity: input_number.retic_stn_2_settime
+              - entity: input_number.retic_stn_3_settime
+              - entity: input_number.retic_stn_4_settime
+            title: Station Run Time Setting
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: |2-
+               This section is to configure for the retic to run automatically. Only two
+              programs are currently provisioned.
+            title: Retic Controller Program
+            theme: dark_teal
+          - type: horizontal-stack
+            cards:
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.retic_prog_is_running_now_flag
+                show_state: true
+                name: Retic Program
+                icon_height: 64px
+              - type: entity
+                entity: binary_sensor.retic_program_is_running_now
+                name: Retic Program Running now
+                icon: mdi:run-fast
+          - type: entities
+            entities:
+              - entity: input_boolean.retic_watering_program_run_1
+              - entity: input_datetime.retic_start_time_1
+              - entity: input_boolean.retic_watering_program_run_2
+              - entity: input_datetime.retic_start_time_2
+          - type: custom:text-divider-row
+            text: Program Station Settings
+          - type: entities
+            entities:
+              - entity: input_boolean.retic_prog_station_1_on
+              - entity: input_boolean.retic_prog_station_2_on
+              - entity: input_boolean.retic_prog_station_3_on
+              - entity: input_boolean.retic_prog_station_4_on
+          - type: custom:text-divider-row
+            text: Set Watering Days
+          - type: horizontal-stack
+            cards:
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.retic_prog_day_1
+                icon_height: 64px
+                name: Mon
+                theme: blue_night
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.retic_prog_day_2
+                name: Tues
+                icon_height: 64px
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.retic_prog_day_3
+                icon_height: 64px
+                name: Wed
+                theme: grey_night
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.retic_prog_day_4
+                name: Thurs
+                icon_height: 64px
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.retic_prog_day_5
+                icon_height: 64px
+                name: Fri
+                theme: grey_night
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.retic_prog_day_6
+                name: Sat
+                icon_height: 64px
+              - type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.retic_prog_day_7
+                icon_height: 64px
+                name: Sun
+                theme: grey_night
+          - type: custom:text-divider-row
+            text: Status & Watering Logs
+          - type: entity
+            entity: binary_sensor.retic_is_watering_day_today
+            name: Is Today Watering Day?
+            theme: Google Dark Theme
+          - type: logbook
+            entities:
+              - automation.retic_start_program_1_run
+              - automation.retic_start_program_2_run
+            hours_to_show: 24
+            title: Retic Program Run Log

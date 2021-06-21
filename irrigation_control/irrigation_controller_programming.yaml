@@ -1,0 +1,673 @@
+##########################################################################################################################
+#  Irrigation / Reticulation Controller Config for Home Assistant
+#
+##########################################################################################################################
+
+group:
+  retic_stations:
+    name: Reticulation Stations
+    entities:
+      - switch.sonoff_1000cae59e_1
+      - switch.sonoff_1000cae59e_2
+      - switch.sonoff_1000cae59e_3
+      - switch.sonoff_1000cae59e_4
+
+#sensor for setting watering days
+binary_sensor:
+  - platform: template
+    sensors:
+      retic_is_watering_day_today:
+        friendly_name: "Is Today Retic Watering Day Sensor"
+        value_template: >-
+            {% set dayOfWeek = now().weekday()+1 %}
+            {% if (dayOfWeek == 1 and states('input_boolean.retic_prog_day_1') == 'on') %}
+            on
+            {% elif (dayOfWeek == 2 and states('input_boolean.retic_prog_day_2') == 'on') %}
+            on
+            {% elif (dayOfWeek == 3 and states('input_boolean.retic_prog_day_3') == 'on') %}
+            on
+            {% elif (dayOfWeek == 4 and states('input_boolean.retic_prog_day_4') == 'on') %}
+            on
+            {% elif (dayOfWeek == 5 and states('input_boolean.retic_prog_day_5') == 'on') %}
+            on
+            {% elif (dayOfWeek == 6 and states('input_boolean.retic_prog_day_6') == 'on') %}
+            on
+            {% elif (dayOfWeek == 7 and states('input_boolean.retic_prog_day_7') == 'on') %}
+            on
+            {% else %}
+            off
+            {% endif %}
+          
+      retic_program_is_running_now: 
+         friendly_name: "Is the Retic Program running right now"
+         value_template: >-
+            {{ states('input_boolean.retic_prog_is_running_now_flag') }} 
+
+
+timer:
+  retic_stn_1_timer:
+    name: Retic Station 1 Timer
+    
+  retic_stn_2_timer:  
+    name: Retic Station 2 Timer
+    
+  retic_stn_3_timer:
+    name: Retic Station 3 Timer
+    
+  retic_stn_4_timer:  
+    name: Retic Station 4 Timer    
+           
+
+input_number:
+  retic_stn_1_settime:
+    name: Retic Station 1 Run length    
+    min: 1
+    max: 30
+    step: 1
+
+  retic_stn_2_settime:
+    name: Retic Station 2 Run length    
+    min: 1
+    max: 30
+    step: 1
+
+  retic_stn_3_settime:
+    name: Retic Station 3 Run length
+    min: 1
+    max: 30
+    step: 1
+
+  retic_stn_4_settime:
+    name: Retic Station 4 Run length   
+    min: 1
+    max: 30
+    step: 1
+
+input_datetime:
+    retic_start_time_1:
+        name: Retic Start Time 1
+        has_date: false
+        has_time: true
+        
+    retic_start_time_2:
+        name: Retic Start Time 2
+        has_date: false
+        has_time: true
+
+##
+##
+
+input_boolean:
+
+  retic_prog_activation:
+    name: Retic Program Activation   
+    icon: mdi:play-pause
+
+  ##
+  ## Retic Days Program setting - which day to run
+  ##
+  retic_prog_day_1:
+    name: Retic Day Monday
+    icon: mdi:calendar
+  
+  retic_prog_day_2:
+    name: Retic Day Tuesday
+    icon: mdi:calendar
+    
+  retic_prog_day_3:
+    name: Retic Day Wednesday
+    icon: mdi:calendar
+    
+  retic_prog_day_4:
+    name: Retic Day Thursday
+    icon: mdi:calendar
+  
+  retic_prog_day_5:
+    name: Retic Day Friday
+    icon: mdi:calendar
+    
+  retic_prog_day_6:
+    name: Retic Day Saturday
+    icon: mdi:calendar
+    
+  retic_prog_day_7:
+    name: Retic Day Sunday
+    icon: mdi:calendar
+    
+  ##  
+  # Flag to indicate if the Retic Controller program should run
+  ##
+  retic_watering_program_run_1:
+    name: Retic Program 1 Run 
+    icon: mdi:play-box-multiple-outline
+    
+  retic_watering_program_run_2:
+    name: Retic Program 2 Run 
+    icon: mdi:play-box-multiple-outline
+
+  # Flag to indicate if the Retic station 1 should run as part of the program
+  retic_prog_station_1_on:
+    name: Retic Station 1 On
+    icon: mdi:water-plus-outline
+
+  # Flag to indicate if the Retic station 2 should run as part of the program
+  retic_prog_station_2_on:
+    name: Retic Station 2 On
+    icon: mdi:water-plus-outline
+
+  # Flag to indicate if the Retic station 3 should run as part of the program
+  retic_prog_station_3_on:
+    name: Retic Station 3 On
+    icon: mdi:water-plus-outline
+    
+  # Flag to indicate if the Retic station 4 should run as part of the program
+  retic_prog_station_4_on:
+    name: Retic Station 4 On
+    icon: mdi:water-plus-outline
+
+  retic_prog_is_running_now_flag:
+    name: Retic Program is current running flag
+    icon: mdi:run 
+    
+#######################
+# Automation Section  #
+#######################
+
+automation:
+
+## Station 1 ##
+
+- alias: Retic Timer Start - Retic Station 1 run
+  description: Set the timer on station 1 on when turned on, and turn off station
+    1 when reached
+  trigger:
+  - platform: state
+    entity_id: switch.sonoff_1000cae59e_1
+    from: 'off'
+    to: 'on'
+  condition: []
+  action:
+  - service: timer.start
+    data:
+      duration: 00:{{ states.input_number.retic_stn_1_settime.state | int }}:00
+    entity_id: timer.retic_stn_1_timer
+  - delay: '{{ states(''input_number.retic_stn_1_settime'') | multiply(60) | int }}'
+  - service: switch.turn_off
+    data: {}
+    entity_id: switch.sonoff_1000cae59e_1
+  - service: timer.finish
+    data: {}
+    entity_id: timer.retic_stn_1_timer
+  mode: restart
+  
+  
+- alias: Retic Timer Cancel - Retic Station 1 off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: switch.sonoff_1000cae59e_1    
+    to: 'off'
+  action:
+  - service: timer.cancel
+    data: {}
+    entity_id: timer.retic_stn_1_timer
+  mode: restart
+
+## ------------
+## Station 2 ##
+## ------------
+- alias: Retic Timer Start - Retic Station 2 run
+  description: Set the timer on station 2 on when turned on, and turn off station
+    1 when reached
+  trigger:
+  - platform: state
+    entity_id: switch.sonoff_1000cae59e_2
+    from: 'off'
+    to: 'on'
+  condition: []
+  action:
+  - service: timer.start
+    data:
+      duration: 00:{{ states.input_number.retic_stn_2_settime.state | int }}:00
+    entity_id: timer.retic_stn_2_timer
+  - delay: '{{ states(''input_number.retic_stn_2_settime'') | multiply(60) | int }}'
+
+  - service: timer.finish
+    data: {}
+    entity_id: timer.retic_stn_2_timer  
+  - service: switch.turn_off
+    data: {}
+    entity_id: switch.sonoff_1000cae59e_2
+  mode: restart
+  
+- alias: Retic Timer Cancel - Retic Station 2 off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: switch.sonoff_1000cae59e_2    
+    to: 'off'  
+  action:
+  - service: timer.cancel
+    data: {}
+    entity_id: timer.retic_stn_2_timer
+  mode: restart
+
+## Station 3 ##
+
+- alias: Retic Timer Start - Retic Station 3 run
+  description: Set the timer on station 3 on when turned on, and turn off station
+    1 when reached
+  trigger:
+  - platform: state
+    entity_id: switch.sonoff_1000cae59e_3
+    from: 'off'
+    to: 'on'
+  condition: []
+  action:
+  - service: timer.start
+    data:
+      duration: 00:{{ states.input_number.retic_stn_3_settime.state | int }}:00
+    entity_id: timer.retic_stn_3_timer
+  - delay: '{{ states(''input_number.retic_stn_3_settime'') | multiply(60) | int }}'
+  - service: switch.turn_off
+    data: {}
+    entity_id: switch.sonoff_1000cae59e_3
+  - service: timer.finish
+    data: {}
+    entity_id: timer.retic_stn_3_timer
+  mode: restart
+  
+  
+- alias: Retic Timer Cancel - Retic Station 3 off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: switch.sonoff_1000cae59e_3    
+    to: 'off'
+  condition: []
+  action:
+  - service: timer.cancel
+    data: {}
+    entity_id: timer.retic_stn_3_timer
+  mode: restart    
+ 
+ 
+ ## Station 4 ##
+
+- alias: Retic Timer Start - Retic Station 4 run
+  description: Set the timer on station 4 on when turned on, and turn off station
+    1 when reached
+  trigger:
+  - platform: state
+    entity_id: switch.sonoff_1000cae59e_4
+    from: 'off'
+    to: 'on'
+  condition: []
+  action:
+  - service: timer.start
+    data:
+      duration: 00:{{ states.input_number.retic_stn_4_settime.state | int }}:00
+    entity_id: timer.retic_stn_4_timer
+  - delay: '{{ states(''input_number.retic_stn_4_settime'') | multiply(60) | int }}'
+  - service: switch.turn_off
+    data: {}
+    entity_id: switch.sonoff_1000cae59e_4
+  - service: timer.finish
+    data: {}
+    entity_id: timer.retic_stn_4_timer
+  mode: restart
+  
+  
+- alias: Retic Timer Cancel - Retic Station 4 off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: switch.sonoff_1000cae59e_4    
+    to: 'off'
+  condition: []
+  action:
+  - service: timer.cancel
+    data: {}
+    entity_id: timer.retic_stn_4_timer
+  mode: restart    
+
+##------------------------------------------------------##
+## Main Retic scheduler program
+##------------------------------------------------------##
+
+## -- Program 1 -- #
+
+- alias: Retic - Start Program 1 Run
+  description: ''
+  trigger:
+  - platform: time
+    at: input_datetime.retic_start_time_1
+  condition:
+  - condition: state
+    entity_id: binary_sensor.retic_is_watering_day_today
+    state: 'on'
+  - condition: state
+    state: 'on'
+    entity_id: input_boolean.retic_watering_program_run_1
+  - condition: state
+    state: 'on'
+    entity_id: input_boolean.retic_prog_activation
+    
+  action:
+  - service: input_boolean.turn_on
+    data: {}
+    entity_id: input_boolean.retic_prog_is_running_now_flag
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.retic_prog_station_1_on
+        state: 'on'
+      sequence:
+      - service: script.retic_run_station_1
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_1
+    default: []
+  - wait_template: '"{{ is_state(''switch.sonoff_1000cae59e_1'', ''off'') }}"'
+    timeout: 00:00:15
+    continue_on_timeout: true
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.retic_prog_station_2_on
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.retic_prog_is_running_now_flag
+        state: 'on'
+      sequence:
+      - service: script.retic_run_station_2
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_2
+    default: []
+  - wait_template: '"{{ is_state(''switch.sonoff_1000cae59e_2'', ''off'') }}"'
+    timeout: 00:00:15
+    continue_on_timeout: true
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.retic_prog_station_3_on
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.retic_prog_is_running_now_flag
+        state: 'on'
+      sequence:
+      - service: script.retic_run_station_3
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_2
+    default: []
+  - wait_template: '"{{ is_state(''switch.sonoff_1000cae59e_3'', ''off'') }}"'
+    timeout: 00:00:15
+    continue_on_timeout: true
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.retic_prog_station_4_on
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.retic_prog_is_running_now_flag
+        state: 'on'
+      sequence:
+      - service: script.retic_run_station_4
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_2
+    default: []
+  - wait_template: '"{{ is_state(''switch.sonoff_1000cae59e_4'', ''off'') }}"'
+    timeout: 00:00:10
+    continue_on_timeout: true
+  - service: input_boolean.turn_off
+    data: {}
+    entity_id: input_boolean.retic_prog_is_running_now_flag
+  mode: restart
+
+## -- Program 2 -- #
+
+- alias: Retic - Start Program 2 Run
+  description: ''
+  trigger:
+  - platform: time
+    at: input_datetime.retic_start_time_2
+  condition:
+  - condition: state
+    entity_id: binary_sensor.retic_is_watering_day_today
+    state: 'on'
+  - condition: state
+    state: 'on'
+    entity_id: input_boolean.retic_watering_program_run_2
+  - condition: state
+    state: 'on'
+    entity_id: input_boolean.retic_prog_activation
+  action:
+  - service: input_boolean.turn_on
+    data: {}
+    entity_id: input_boolean.retic_prog_is_running_now_flag
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.retic_prog_station_1_on
+        state: 'on'
+      sequence:
+      - service: script.retic_run_station_1
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_1
+    default: []
+  - wait_template: '"{{ is_state(''switch.sonoff_1000cae59e_1'', ''off'') }}"'
+    timeout: 00:00:15
+    continue_on_timeout: true
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.retic_prog_station_2_on
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.retic_prog_is_running_now_flag
+        state: 'on'
+      sequence:
+      - service: script.retic_run_station_2
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_2
+    default: []
+  - wait_template: '"{{ is_state(''switch.sonoff_1000cae59e_2'', ''off'') }}"'
+    timeout: 00:00:15
+    continue_on_timeout: true
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.retic_prog_station_3_on
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.retic_prog_is_running_now_flag
+        state: 'on'
+      sequence:
+      - service: script.retic_run_station_3
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_2
+    default: []
+  - wait_template: '"{{ is_state(''switch.sonoff_1000cae59e_3'', ''off'') }}"'
+    timeout: 00:00:15
+    continue_on_timeout: true
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.retic_prog_station_4_on
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.retic_prog_is_running_now_flag
+        state: 'on'
+      sequence:
+      - service: script.retic_run_station_4
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_2
+    default: []
+  - wait_template: '"{{ is_state(''switch.sonoff_1000cae59e_4'', ''off'') }}"'
+    timeout: 00:00:10
+    continue_on_timeout: true
+  - service: input_boolean.turn_off
+    data: {}
+    entity_id: input_boolean.retic_prog_is_running_now_flag
+  mode: restart
+
+  ## -- Program termination / finish -- #
+  
+- alias: Retic - turn off all stations when retic program turns off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: input_boolean.retic_prog_is_running_now_flag
+    from: 'on'
+    to: 'off'
+  condition: []
+  action:
+  - service: script.retic_turn_off_all_stations
+    data: {}
+  mode: restart
+
+  
+##########################################################
+## Scripts                                              ##
+##########################################################
+
+script:
+    retic_turn_off_all_stations:
+      alias: Retic - turn off all stations
+      sequence:
+      - service: switch.turn_off
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_1
+      - service: switch.turn_off
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_2
+      - service: switch.turn_off
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_3
+      - service: switch.turn_off
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_4
+      mode: single
+      icon: mdi:water-off-outline
+
+
+    retic_run_station_1:
+      alias: Retic - Run Station 1
+      sequence:
+      - service: switch.turn_on
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_1
+      - delay: '{{ states(''input_number.retic_stn_1_settime'') | multiply(60) | int }}'
+      mode: restart
+      icon: mdi:water
+      
+    retic_run_station_2:
+      alias: Retic - Run Station 2
+      sequence:
+      - service: switch.turn_on
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_2
+      - delay: '{{ states(''input_number.retic_stn_2_settime'') | multiply(60) | int }}'
+      mode: restart
+      icon: mdi:water
+
+    retic_run_station_3:
+      alias: Retic - Run Station 3
+      sequence:
+      - service: switch.turn_on
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_3
+      - delay: '{{ states(''input_number.retic_stn_3_settime'') | multiply(60) | int }}'
+      mode: restart
+      icon: mdi:water
+      
+    retic_run_station_4:
+      alias: Retic - Run Station 4
+      sequence:
+      - service: switch.turn_on
+        data: {}
+        entity_id: switch.sonoff_1000cae59e_4
+      - delay: '{{ states(''input_number.retic_stn_4_settime'') | multiply(60) | int }}'
+      mode: restart
+      icon: mdi:water
+      
+      
+    #--------------------------------------------
+    # Script to turn on/off all the Automations on Retic
+    #--------------------------------------------
+    retic_turn_off_all_automations:
+      alias: Retic - Turn off all Automations
+      sequence:
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_start_program_1_run
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_start_program_2_run        
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_timer_cancel_retic_station_1_off
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_timer_cancel_retic_station_2_off
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_timer_cancel_retic_station_3_off
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_timer_cancel_retic_station_4_off        
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_timer_start_retic_station_1_run
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_timer_start_retic_station_2_run        
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_timer_start_retic_station_3_run                
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_timer_start_retic_station_4_run
+      - service: automation.turn_off
+        data: {}
+        entity_id: automation.retic_turn_off_all_stations_when_retic_program_turns_off        
+      mode: restart
+      icon: mdi:robot
+
+    retic_turn_on_all_automations:
+      alias: Retic - Turn on all Automations
+      sequence:
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_start_program_1_run
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_start_program_2_run        
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_timer_cancel_retic_station_1_off
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_timer_cancel_retic_station_2_off
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_timer_cancel_retic_station_3_off
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_timer_cancel_retic_station_4_off       
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_timer_start_retic_station_1_run
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_timer_start_retic_station_2_run        
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_timer_start_retic_station_3_run                
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_timer_start_retic_station_4_run
+      - service: automation.turn_on
+        data: {}
+        entity_id: automation.retic_turn_off_all_stations_when_retic_program_turns_off        
+      mode: restart
+      icon: mdi:robot
